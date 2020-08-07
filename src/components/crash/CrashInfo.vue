@@ -8,9 +8,14 @@
       <el-form-item label="用户名称：" :label-width="formLabelWidth">
         <el-input v-model="crash.username" disabled></el-input>
       </el-form-item>
+      <el-form-item label="版本号数字：" :label-width="formLabelWidth">
+        <el-input v-model="crash.versioncode" disabled></el-input>
+      </el-form-item>
+      <el-form-item label="版本号：" :label-width="formLabelWidth">
+        <el-input v-model="crash.version" disabled></el-input>
+      </el-form-item>
       <el-form-item label="闪退时间：" :label-width="formLabelWidth">
         <el-input  readonly :value="crash.datetime | dateTimeFormat" disabled></el-input>
-
       </el-form-item>
       <el-form-item label="详细信息：" :label-width="formLabelWidth">
         <el-input   :rows="10" type="textarea" v-model="crash.info" ></el-input>

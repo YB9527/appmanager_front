@@ -20,18 +20,27 @@
         width="180">
       </el-table-column>
       <el-table-column
+        prop="versioncode"
+        label="更新版本号数字"
+        width="180">
+      </el-table-column>
+      <el-table-column
         prop="version"
         label="更新版本号"
         width="180">
       </el-table-column>
+
       <el-table-column
-        prop="levelcontent"
-        label="更新内容">
+        label="更新内容"
+        width="180">
+        <template slot-scope="scope">
+          {{ scope.row.levelcontent.length > 50 ? scope.row.levelcontent.substring(0,50)+"...": scope.row.levelcontent}}
+        </template>
       </el-table-column>
 
       <el-table-column
         label="强制更新"
-        width="180">
+        width="100">
         <template slot-scope="scope">
           <el-switch
             disabled
@@ -53,16 +62,28 @@
         </template>
       </el-table-column>
       <el-table-column
-        prop="downloadcount"
         label="下载次数">
+        <template slot-scope="scope">
+
+
+          <el-button
+            size="mini"
+            type="info"
+            @click="lookDownUserInfo(scope.row.downusers)"> {{scope.row.downusers | downcount}}次
+          </el-button>
+        </template>
+
       </el-table-column>
       <el-table-column label="操作"  width="280">
         <template slot-scope="scope">
+
           <el-button
             size="mini"
             type="info"
             @click="editApp(scope.$index, scope.row)">编辑
           </el-button>
+
+
           <el-button
             size="mini"
             type="warning"
@@ -86,6 +107,34 @@
                        @click="saveOrUpdateInDatabase(dialog_appversion)">{{dialog_conten_info.okbutton}}</el-button>
      </span>
     </el-dialog>
+    <el-dialog title="下载情况" width="500px" :visible.sync="dialog_downuser_visible" center>
+      <el-table
+        :data="downusers"
+        stripe
+        style="width: 100%">
+        <el-table-column type="index" label="序号" width="60px">
+          <template slot-scope="scope">
+            {{scope.$index +1}}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="user.loginName"
+          label="用户账号"
+         >
+        </el-table-column>
+        <el-table-column
+          prop="user.userName"
+          label="用户名称"
+         >
+        </el-table-column>
+        <el-table-column
+          prop="downcount"
+          label="下载次数"
+         >
+        </el-table-column>
+      </el-table>
+    </el-dialog>
+
   </div>
 </template>
 
@@ -98,6 +147,7 @@
     components: {AppInfo,},
     data() {
       return {
+        dialog_downuser_visible:false,
         dialog_appversion_visible: false,
         appversions: [],
         dialog_appversion_old: {},
@@ -117,13 +167,23 @@
         }
       }
     },
+    filters:{
+      downcount(downusers){
+        let count =0;
+        if(downusers && downusers instanceof Array){
+          for (let downuser of downusers){
+            count += downuser.downcount;
+          }
+        }
+        return count;
+      }
+    },
     created() {
       this.$store.commit("getCustom",{
         url:UrlManager.appFindAllHost(),
         callback:datas=>{
-
-          for(let data of datas){
-            this.appversions.push(data);
+          for (let i = datas.length -1; i >= 0; i--) {
+            this.appversions.push(datas[i]);
           }
         }
       });
@@ -205,10 +265,11 @@
            url:UrlManager.appUpdateByPOId(),
            po:appversion,
            callback: (data) => {
-             this.appversions.splice(this.dialog_state.index,1,data)
+             this.appversions.splice(this.dialog_state.index,1,data);
              this.dialog_appversion_visible = false;
            }
          });
+
        }
 
       },
@@ -220,6 +281,10 @@
         this.dialog_conten_info = this.dialog_content_add;
         this.dialog_appversion_visible = true;
         this.dialog_state.state = 0;
+      },
+      lookDownUserInfo(downusers){
+        this.dialog_downuser_visible= true;
+        this.downusers= downusers;
       },
       //下载app
       downApp(index, appversion){

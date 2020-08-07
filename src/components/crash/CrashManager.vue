@@ -19,6 +19,14 @@
         label="用户名称">
       </el-table-column>
       <el-table-column
+        prop="versioncode"
+        label="版本号数字">
+      </el-table-column>
+      <el-table-column
+        prop="version"
+        label="版本号">
+      </el-table-column>
+      <el-table-column
         label="闪退时间">
         <template slot-scope="scope">
           {{scope.row.datetime | dateTimeFormat}}
@@ -76,6 +84,12 @@
     <el-dialog title="处理crash" width="50%" :visible.sync="dialog_crash_handel_visible" top="2vh" center>
       <div>
         <el-form>
+          <el-form-item label="版本号数字：" :label-width="formLabelWidth">
+            <el-input disabled   v-model="dialog_crash.versioncode"></el-input>
+          </el-form-item>
+          <el-form-item label="版本号：" :label-width="formLabelWidth">
+            <el-input disabled  v-model="dialog_crash.version"></el-input>
+          </el-form-item>
           <el-form-item label="crash信息：" :label-width="formLabelWidth">
             <el-input disabled :rows="10" type="textarea" v-model="dialog_crash.info"></el-input>
           </el-form-item>
@@ -122,8 +136,8 @@
       this.$store.commit("getCustom",{
         url:UrlManager.crashFindAllHost(),
         callback:datas=>{
-          for(let data of datas){
-            this.crashs.push(data);
+          for (let i = datas.length -1; i >= 0; i--) {
+            this.crashs.push(datas[i]);
           }
         }
       });
