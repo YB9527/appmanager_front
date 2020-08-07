@@ -25,7 +25,7 @@
         width="180">
       </el-table-column>
       <el-table-column
-        prop="levelContent"
+        prop="levelcontent"
         label="更新内容">
       </el-table-column>
 
@@ -35,30 +35,38 @@
         <template slot-scope="scope">
           <el-switch
             disabled
-            v-model="scope.row.force"
+            v-model="scope.row.isforce"
             active-color="#13ce66"
             inactive-color="#ff4949"/>
         </template>
       </el-table-column>
 
       <el-table-column
-        prop="url"
-        label="下载网址">
+        prop="filename"
+        label="文件名字">
       </el-table-column>
       <el-table-column
         prop="uploaddate"
         label="上传日期">
+        <template slot-scope="scope">
+          {{scope.row.uploaddate | dateTimeFormat}}
+        </template>
       </el-table-column>
       <el-table-column
         prop="downloadcount"
         label="下载次数">
       </el-table-column>
-      <el-table-column label="操作">
+      <el-table-column label="操作"  width="280">
         <template slot-scope="scope">
           <el-button
             size="mini"
             type="info"
             @click="editApp(scope.$index, scope.row)">编辑
+          </el-button>
+          <el-button
+            size="mini"
+            type="warning"
+            @click="downApp(scope.$index, scope.row)">下载
           </el-button>
           <el-button
             size="mini"
@@ -84,7 +92,7 @@
 <script>
   import AppInfo from '@/components/app/AppInfo'
   import AppVersion from '@/components/app/AppVersion'
-
+  import UrlManager from '@/components/public/UrlManager'
   export default {
     name: "AppManager",
     components: {AppInfo,},
@@ -110,9 +118,16 @@
       }
     },
     created() {
-      this.appversions.push(AppVersion.newAppVersion());
-      this.appversions.push(AppVersion.newAppVersion());
-      this.appversions.push(AppVersion.newAppVersion());
+      this.$store.commit("getCustom",{
+        url:UrlManager.appFindAllHost(),
+        callback:datas=>{
+
+          for(let data of datas){
+            this.appversions.push(data);
+          }
+        }
+      });
+
     },
     methods: {
       /**
@@ -121,11 +136,18 @@
        * @param appversion
        */
       deleteApp(index, appversion) {
+        console.log(111,appversion.id);
         this.$store.commit("confirm", {
-          message: "确定要删除这个app吗？",
+          msg: "确定要删除这个app吗？",
           callback: falg => {
             if (falg) {
-              this.appversions.splice(index, 1);
+              this.$store.commit("getCustom",{
+                url:UrlManager.appDeleteByidHost()+appversion.id,
+                callback: data=>{
+                  this.appversions.splice(index, 1);
+                  this.$store.commit("notify",{type:0,msg:"删除成功"})
+                }
+              });
             }
           }
         });
@@ -144,41 +166,50 @@
        */
       saveOrUpdateInDatabase(appversion) {
 
-        let errors = AppVersion.checkAddError(appversion);
-        if (errors.length > 0) {
-          this.$store.commit("showMessageBox", {
-            message: errors.toString(),
-            type: "error"
-          });
-          return;
-        }
+
        if(this.dialog_state.state === 0){
+         let errors = AppVersion.checkAddError(appversion);
+         if (errors.length > 0) {
+           this.$store.commit("showMessageBox", {
+             msg: errors.toString(),
+             type: "error"
+           });
+           return;
+         }
+
           //新增
          let param = new FormData();
 
         //通过append向form对象添加数据
          param.append("file", appversion.file);
          appversion.file="";//清除文件
-         param.append("appversion", appversion);
+         param.append("po",JSON.stringify(appversion));
 
          this.$store.commit("postFiles", {
-           url: this.$store.getters.getHost() + "uploadApp", formData: param, callback: (resultdata) => {
-             if (resultdata.status === "Success") {
-                result = JSON.parse(resultdata.json);
+           url: UrlManager.appSaveSingleHost(), formData: param, callback: (data) => {
                this.dialog_appversion_visible = false;
-               this.appversions.push(result.appversion);
-             } else {
-               this.$store.commit("notify", {type: resultdata.status, message: resultdata.message})
-             }
+               this.appversions.push(data);
            }
          });
        }else if(this.dialog_state.state === 1){
+         let errors = AppVersion.checkUpdateError(appversion);
+         if (errors.length > 0) {
+           this.$store.commit("showMessageBox", {
+             msg: errors.toString(),
+             type: "error"
+           });
+           return;
+         }
           //编辑
-         this.appversions.splice(this.dialog_state.index,1,appversion)
-         this.dialog_appversion_visible = false;
+         this.$store.commit("postCustom",{
+           url:UrlManager.appUpdateByPOId(),
+           po:appversion,
+           callback: (data) => {
+             this.appversions.splice(this.dialog_state.index,1,data)
+             this.dialog_appversion_visible = false;
+           }
+         });
        }
-
-
 
       },
       /**
@@ -190,13 +221,16 @@
         this.dialog_appversion_visible = true;
         this.dialog_state.state = 0;
       },
-      /**
-       * 检查 appversion 的正确性
-       * @param appversion
-       * @return boolean
-       */
-      check(appversion) {
+      //下载app
+      downApp(index, appversion){
+        window.location.href =UrlManager.appDownHost()+appversion.id;
+        appversion.downloadcount = appversion.downloadcount+1;
+        /*  this.$store.commit("getCustom",{
+            url:UrlManager.appDownHost()+"?id="+appversion.id,
+            callback:data=>{
 
+            }
+          });*/
       }
     }
   }

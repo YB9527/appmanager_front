@@ -9,10 +9,14 @@
         <el-input v-model="crash.username" disabled></el-input>
       </el-form-item>
       <el-form-item label="闪退时间：" :label-width="formLabelWidth">
-        <el-input v-model="crash.datetime" disabled></el-input>
+        <el-input  readonly :value="crash.datetime | dateTimeFormat" disabled></el-input>
+
       </el-form-item>
       <el-form-item label="详细信息：" :label-width="formLabelWidth">
-        <el-input   :rows="10" type="textarea" v-model="crash.info" disabled></el-input>
+        <el-input   :rows="10" type="textarea" v-model="crash.info" ></el-input>
+      </el-form-item>
+      <el-form-item label="手机品牌：" :label-width="formLabelWidth">
+        <el-input  v-model="crash.phonename" disabled></el-input>
       </el-form-item>
       <el-form-item label="手机型号：" :label-width="formLabelWidth">
         <el-input  v-model="crash.phonetype" disabled></el-input>
@@ -41,7 +45,12 @@
     created() {
 
     },
-    methods: {}
+    methods: {
+      formatCardNumber(datetime){
+        console.log(1111);
+        return 123;
+       },
+    }
   }
 </script>
 

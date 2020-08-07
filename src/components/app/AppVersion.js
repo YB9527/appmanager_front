@@ -2,18 +2,19 @@ function newAppVersion() {
   return {
     id:0,
     title: "App更新",//更新标题
-    levelContent: "",//更新内容
+    levelcontent: "",//更新内容
     version: "",//版本号
-    force: false,//是否强制更新
+    isforce: false,//是否强制更新
     uploaddate: "",//上传日期
     downloadcount: 0,//下载次数
-    url: "",
+    filename: "",
     file: "",//上传的文件
+    filelength:0,//文件大小
   }
 };
 exports.newAppVersion = newAppVersion;
 
-function checkAddError(appversion) {
+function checkUpdateError(appversion) {
   let errors = [];
   if (!appversion) {
     errors.push("没有传检查的对象过来！！！");
@@ -21,7 +22,7 @@ function checkAddError(appversion) {
   }
   let checkArray = [
     {key: 'title', error: '标题没有填写'},
-    {key: 'levelContent', error: '更新内容没有填写'},
+    {key: 'levelcontent', error: '更新内容没有填写'},
     {key: 'version', error: '版本号没有填写'},
   ];
 
@@ -31,10 +32,17 @@ function checkAddError(appversion) {
       errors.push(checkArray[i].error);
     }
   }
+  return errors;
+};
+
+function checkAddError(appversion) {
+  let errors = checkUpdateError(appversion)
   let file = appversion.file;
   if (!file) {
     errors.push("没有添加上传文件！！！")
   }
   return errors;
 };
+
 exports.checkAddError = checkAddError;
+exports.checkUpdateError = checkUpdateError;

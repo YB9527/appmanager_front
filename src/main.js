@@ -27,9 +27,7 @@ const store = new Vuex.Store({
       self: '',
     },
     getters: {
-      getHost(state) {
-        return state.host;
-      },
+
       getUser(state) {
         return state.user;
       },
@@ -98,11 +96,14 @@ const store = new Vuex.Store({
         };
         axios.post(custom.url, custom.formData, {headers: headers})
           .then(res => {
-            custom.callback(res.data);
+            this.commit("handelResponse",{respose:res,callback:data=>{
+                custom.callback(data);
+              }
+            });
           });
       },
       postCustom(state, custom) {
-        let url = state.host + custom.url;
+        let url =custom.url;
         let po = custom.po;
         let callback = custom.callback;
         let myFormDatas = new FormData();
@@ -117,11 +118,15 @@ const store = new Vuex.Store({
           data: myFormDatas,
         })
           .then(res => {
-            callback(res.data);
+            this.commit("handelResponse",{respose:res,callback:data=>{
+                custom.callback(data);
+              }
+            });
           })
       },
+
       postFormDataCustom(state, custom) {
-        let url = state.host + custom.url;
+        let url = custom.url;
         let callback = custom.callback;
         let myFormDatas = custom.formdata;
         axios({
@@ -134,13 +139,33 @@ const store = new Vuex.Store({
           })
       },
       getCustom(state, custom) {
-        let url = state.host + custom.url;
-        let callback = custom.callback;
+        let url =  custom.url;
         axios.get(url)
           .then(res => {
-            callback(res.data);
+            this.commit("handelResponse",{respose:res,callback:data=>{
+                custom.callback(data);
+              }
+            });
           });
       },
+      downCustom(state, custom) {
+        let url =  custom.url;
+        axios.get(url)
+          .then(res => {
+
+          });
+      },
+      handelResponse(state,custom){
+        let res = custom.respose.data;
+        if (res.ok) {
+          let result = JSON.parse(res.data);
+          custom.callback(result);
+        } else {
+          this.commit('notify',{type:1, msg: res.msg});
+        }
+      },
+
+
       confirm(state, callbackpo) {
         state.self.$confirm(callbackpo.message, '提示', {
           confirmButtonText: '确定',
@@ -155,7 +180,7 @@ const store = new Vuex.Store({
       showMessageBox(state, messagecustom) {
         ElementUI.Message({
           showClose: true,
-          message: messagecustom.message,
+          message: messagecustom.msg,
           type: messagecustom.type.toLowerCase(),
           duration: messagecustom.duration?messagecustom.duration:2000,
         });
@@ -163,8 +188,8 @@ const store = new Vuex.Store({
       notify(state, custom) {
         ElementUI.Notification({
           title: custom.title,
-          message: custom.message,
-          type: custom.type.toLowerCase(),
+          message: custom.msg,
+          type: custom.type == 0 ? "success":"error",
           duration: 2000,
         });
       },
@@ -179,6 +204,16 @@ Vue.filter('dateFormat', (value) => {
   let date = new Date(value);
   return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
 });
+
+Vue.filter('dateTimeFormat', (value) => {
+  if (!value) {
+    return value;
+  }
+  let date = new Date(value);
+
+  return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
+});
+
 
 
 export default store

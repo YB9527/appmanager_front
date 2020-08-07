@@ -19,8 +19,10 @@
         label="用户名称">
       </el-table-column>
       <el-table-column
-        prop="datetime"
         label="闪退时间">
+        <template slot-scope="scope">
+          {{scope.row.datetime | dateTimeFormat}}
+        </template>
       </el-table-column>
       <el-table-column
         label="详细信息"
@@ -28,6 +30,10 @@
         <template slot-scope="scope">
           {{ scope.row.info.length > 50 ? scope.row.info.substring(0,50)+"...": scope.row.info}}
         </template>
+      </el-table-column>
+      <el-table-column
+        prop="phonename"
+        label="手机品牌">
       </el-table-column>
       <el-table-column
         prop="phonetype"
@@ -97,6 +103,7 @@
 <script>
   import ModelManager from '@/components/public/ModelManager'
   import CrashInfo from "./CrashInfo";
+  import UrlManager from '@/components/public/UrlManager'
 
   export default {
     name: "CrashManager",
@@ -112,9 +119,14 @@
       }
     },
     created() {
-      this.crashs.push(ModelManager.newCrashPo());
-      this.crashs.push(ModelManager.newCrashPo());
-      this.crashs.push(ModelManager.newCrashPo());
+      this.$store.commit("getCustom",{
+        url:UrlManager.crashFindAllHost(),
+        callback:datas=>{
+          for(let data of datas){
+            this.crashs.push(data);
+          }
+        }
+      });
     },
     methods: {
       /**
@@ -132,8 +144,14 @@
         this.dialog_crash_index = index;
       },
       updateInDatabase(dialog_crash) {
-        this.crashs.splice(this.dialog_crash_index, 1, dialog_crash);
-        this.dialog_crash_handel_visible = false;
+        this.$store.commit("postCustom",{
+            url:UrlManager.crashUpdateByPOId(),
+            po:dialog_crash,
+            callback: data=>{
+              this.crashs.splice(this.dialog_crash_index, 1, data);
+              this.dialog_crash_handel_visible = false;
+            }
+        });
       }
     }
   }
